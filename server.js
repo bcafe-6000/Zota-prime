@@ -1,0 +1,5 @@
+import 'dotenv/config';import express from 'express';import pg from 'pg';import {Telegraf} from 'telegraf';
+const {Pool}=pg;const pool=new Pool({connectionString:process.env.DATABASE_URL,ssl:process.env.DATABASE_URL?.includes('sslmode=require')?{rejectUnauthorized:false}:undefined});
+const app=express();app.use(express.json({limit:'2mb'}));app.get('/api/movies',async(_,res)=>{try{const q=await pool.query("select id,title,description,thumbnail_url,release_year,hls_url from movies where status='published' order by created_at desc");res.json(q.rows)}catch(e){res.status(500).json({error:'database error'})}});app.get('/api/health',(_,res)=>res.json({ok:true}));
+if(process.env.USER_BOT_TOKEN){const bot=new Telegraf(process.env.USER_BOT_TOKEN);bot.start(ctx=>ctx.reply('Welcome to Zota Prime. Open the Mini App from the button/menu configured for this bot.'));bot.launch().then(()=>console.log('User bot started')).catch(console.error);}
+app.listen(process.env.PORT||3000,()=>console.log('Zota Prime backend running'));
